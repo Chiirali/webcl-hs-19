@@ -1,7 +1,8 @@
-import { ObservableList } from "../observable/observable.js";
-import { Attribute }      from "../presentationModel/presentationModel.js";
-import { Scheduler }      from "../dataflow/dataflow.js";
-import { fortuneService } from "./fortuneService.js";
+import { ObservableList }           from "../observable/observable.js";
+import { Attribute, VALID, VALUE }  from "../presentationModel/presentationModel.js";
+import { todoItemProjector }        from "./todoProjector.js";
+import { Scheduler }                from "../dataflow/dataflow.js";
+import { fortuneService }           from "./fortuneService.js";
 
 export { TodoController, TodoItemsView, TodoTotalView, TodoOpenView}
 
@@ -14,14 +15,18 @@ const TodoController = () => {
         textAttr.setConverter( input => input.toUpperCase() );
         textAttr.setValidator( input => input.length >= 3   );
 
+        // business rules / constraints (the text is only editable if not done)
+        doneAttr.getObs(VALUE).onChange( isDone => textAttr.getObs("EDITABLE",!isDone).setValue(!isDone));
+
         return {
-            getDone:            doneAttr.valueObs.getValue,
-            setDone:            doneAttr.valueObs.setValue,
-            onDoneChanged:      doneAttr.valueObs.onChange,
-            getText:            textAttr.valueObs.getValue,
+            getDone:            doneAttr.getObs(VALUE).getValue,
+            setDone:            doneAttr.getObs(VALUE).setValue,
+            onDoneChanged:      doneAttr.getObs(VALUE).onChange,
+            getText:            textAttr.getObs(VALUE).getValue,
             setText:            textAttr.setConvertedValue,
-            onTextChanged:      textAttr.valueObs.onChange,
-            onTextValidChanged: textAttr.validObs.onChange,
+            onTextChanged:      textAttr.getObs(VALUE).onChange,
+            onTextValidChanged: textAttr.getObs(VALID).onChange,
+            onTextEditableChanged: textAttr.getObs("EDITABLE").onChange,
         }
     };
 
@@ -35,12 +40,9 @@ const TodoController = () => {
     };
 
     const addFortuneTodo = () => {
-
         const newTodo = Todo();
-
         todoModel.add(newTodo);
         newTodo.setText('...');
-
         scheduler.add( ok =>
            fortuneService( text => {
                    newTodo.setText(text);
@@ -48,7 +50,6 @@ const TodoController = () => {
                }
            )
         );
-
     };
 
     return {
@@ -68,44 +69,8 @@ const TodoController = () => {
 
 const TodoItemsView = (todoController, rootElement) => {
 
-    const render = todo => {
-
-        function createElements() {
-            const template = document.createElement('DIV'); // only for parsing
-            template.innerHTML = `
-                <button class="delete">&times;</button>
-                <input type="text" size="42">
-                <input type="checkbox">            
-            `;
-            return template.children;
-        }
-        const [deleteButton, inputElement, checkboxElement] = createElements();
-
-        checkboxElement.onclick = _ => todo.setDone(checkboxElement.checked);
-        deleteButton.onclick    = _ => todoController.removeTodo(todo);
-
-        todoController.onTodoRemove( (removedTodo, removeMe) => {
-            if (removedTodo !== todo) return;
-            rootElement.removeChild(inputElement);
-            rootElement.removeChild(deleteButton);
-            rootElement.removeChild(checkboxElement);
-            removeMe();
-        } );
-
-        inputElement.oninput = _ => todo.setText(inputElement.value);
-
-        todo.onTextChanged(() => inputElement.value = todo.getText());
-
-        todo.onTextValidChanged(
-            valid => valid
-              ? inputElement.classList.remove("invalid")
-              : inputElement.classList.add("invalid")
-        );
-
-        rootElement.appendChild(deleteButton);
-        rootElement.appendChild(inputElement);
-        rootElement.appendChild(checkboxElement);
-    };
+    const render = todo =>
+        todoItemProjector(todoController, rootElement, todo);
 
     // binding
 
