@@ -1,6 +1,9 @@
 import {EDITABLE, LABEL, VALID, VALUE} from "../presentationModel/presentationModel.js";
 
-export { listItemProjector, formProjector }
+export { listItemProjector, formProjector, pageCss }
+
+const masterClassName = 'instant-update-master'; // should be unique for this projector
+const detailClassName = 'instant-update-detail';
 
 const bindTextInput = (textAttr, inputElement) => {
     inputElement.oninput = _ => textAttr.setConvertedValue(inputElement.value);
@@ -33,6 +36,12 @@ const textInputProjector = textAttr => {
 };
 
 const listItemProjector = (masterController, selectionController, rootElement, model, attributeNames) => {
+
+    if(rootElement.style['grid-template-columns'] === '') {
+        rootElement.classList.add(masterClassName);
+        const columStyle = '1.7em '+ attributeNames.map(x=>'auto').join(' ');
+        rootElement.style['grid-template-columns'] = columStyle;
+    };
 
     const deleteButton      = document.createElement("Button");
     deleteButton.setAttribute("class","delete");
@@ -71,10 +80,10 @@ const formProjector = (detailController, rootElement, model, attributeNames) => 
     const divElement = document.createElement("DIV");
     divElement.innerHTML = `
     <FORM>
-        <DIV class="detail-form">
+        <DIV class="${detailClassName}">
         </DIV>
     </FORM>`;
-    const detailFormElement = divElement.querySelector(".detail-form");
+    const detailFormElement = divElement.querySelector("." + detailClassName);
 
     attributeNames.forEach(attributeName => {
         const labelElement = document.createElement("LABEL"); // add view for attribute of this name
@@ -90,5 +99,25 @@ const formProjector = (detailController, rootElement, model, attributeNames) => 
         model[attributeName].getObs(LABEL, '').onChange(label => labelElement.textContent = label);
     });
 
-    rootElement.firstChild.replaceWith(divElement);
+    if (rootElement.firstChild) {
+        rootElement.firstChild.replaceWith(divElement);
+    } else {
+        rootElement.appendChild(divElement);
+    }
 };
+
+
+const pageCss = `
+    .${masterClassName} {
+        display:        grid;
+        grid-column-gap: 0.5em;
+        grid-template-columns: 1.7em auto auto; /* default: to be overridden dynamically */
+        margin-bottom:  0.5em ;
+    }
+    .${detailClassName} {
+        display:        grid;
+        grid-column-gap: 0.5em;
+        grid-template-columns: 1fr 3fr;
+        margin-bottom:  0.5em ;
+    }
+`;
