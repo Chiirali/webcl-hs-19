@@ -16,36 +16,26 @@
             margin: 3em;
         }
 
-        #glasspane.spot-shade {
-            background-color: rgba(115,115,170,0.7);
-            transition: .7s;
-        }
-
         #glasspane {
+            --shadow-color: rgba(115,115,200,0.9);
+            --spot-x: 50%;
+            --spot-y: 50%;
             position: fixed;
+            display:  none;
             left:     0;
             top:      0;
             width:    100vw;
             height:   100vh;
             z-index:  10;                    /* works without but better be explicit */
             pointer-events:   none;
-            user-input:       none;          /* not needed in all browsers */
-            mix-blend-mode:   multiply;      /* 'overlay' does not work in Safari */
-            /* default: no shading */
-            background-color: white;
-            transition: background-color linear .5s;
+            background-image: radial-gradient(
+                    circle at var(--spot-x) var(--spot-y),
+                    transparent 0%,
+                    transparent 15vh,
+                    var(--shadow-color) 16vh,
+                    var(--shadow-color) 100vh);
         }
-        #spotlight {
-            position:   fixed;
-            top:        50%;
-            left:       50%;
-            width:      20vh;
-            height:     20vh;
-            background-color: white;
-            border-radius:    50%;
-            box-shadow: 0 0 1em white;
-            transform:  translateX(-50%) translateY(-50%);
-        }
+
     </style>
 </head>
 <body>
@@ -53,11 +43,12 @@
 
 <main>
     <div id="glasspane" >
-        <div id="spotlight"></div>
+
     </div>
     <div>
         <h1>Spotlight Test Page</h1>
         <p>Use Alt-Mousemove to show spotlight.</p>
+        <p>Solution with radial gradient, thx to Andreas Meier.</p>
         <p style="background: lightblue">some long text some long text some long text some long text some long text
             some long text some long text some long text some long text some long text
             some long text some long text some long text some long text some long text
@@ -68,12 +59,12 @@
 <script>
     document.onmousemove = evt => {
         if( ! evt.altKey) {
-            glasspane.classList.remove('spot-shade');
+            glasspane.style['display'] = 'none';
             return ;
         }
-        glasspane.classList.add('spot-shade');
-        spotlight.style['left'] = evt.clientX + 'px';
-        spotlight.style['top']  = evt.clientY + 'px';
+        glasspane.style.setProperty('--spot-x', evt.clientX + 'px');
+        glasspane.style.setProperty('--spot-y', evt.clientY + 'px');
+        glasspane.style['display'] = 'initial';
     }
 </script>
 
