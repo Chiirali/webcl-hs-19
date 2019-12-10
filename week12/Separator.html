@@ -13,6 +13,18 @@
         }
 
 
+        .separator {
+            display: grid;
+            grid-template-columns: auto max-content auto;
+            grid-column-gap: 0.5em;
+        }
+
+        .separator::before, .separator::after {
+            content: "";
+            filter: drop-shadow(0 0 3px cyan);
+            background-image: linear-gradient(transparent 48%, blue 48%, blue 52%, transparent 52%);
+
+        }
 
     </style>
 </head>
