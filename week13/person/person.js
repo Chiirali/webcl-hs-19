@@ -21,8 +21,8 @@ const Person = () => {                               // facade
     const lastnameAttr  = Attribute("Mustermann", `Person.${id}.lastname`);
     lastnameAttr.getObs(LABEL).setValue("Last Name");
 
-    // lastnameAttr.setConverter( input => input.toUpperCase() );  // enable for playing around
-    // lastnameAttr.setValidator( input => input.length >= 3   );
+    lastnameAttr.setConverter( input => input.toUpperCase() );  // enable for playing around
+    lastnameAttr.setValidator( input => input.length >= 3   );
 
     return {
         firstname:          firstnameAttr,
@@ -63,18 +63,8 @@ const DetailView = (selectionController, rootElement) => {
     formProjector(selectionController, rootElement, selectionMold, ALL_ATTRIBUTE_NAMES); // only once, view is stable, binding is stable
 
     selectionController.onModelSelected( selectedPersonModel => { // todo: make this generic
-
-        // store current values of the selected model to display
-        const firstnameValue = selectedPersonModel.firstname.getObs(VALUE).getValue();
-        const lastnameValue = selectedPersonModel.lastname.getObs(VALUE).getValue();
-
         // set the qualifiers to connect detailModel with current selection
-        // this will temporarily set the values of the current selection to the values of the detailModel
         selectionMold.lastname.setQualifier(selectedPersonModel.lastname.getQualifier());
         selectionMold.firstname.setQualifier(selectedPersonModel.firstname.getQualifier());
-
-        // set the current values
-        selectionMold.lastname.getObs(VALUE).setValue(lastnameValue);
-        selectionMold.firstname.getObs(VALUE).setValue(firstnameValue);
     });
 };
